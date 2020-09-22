@@ -280,3 +280,10 @@ $ sudo systemctl status x0vncserver
 ![vnc-viewer.png](./img/vnc-viewer.png)
 
 ![vnc_jetson.png](./img/vnc_jetson.png)
+
+***
+
+## 冷却ケース組み立て
+
+[jetson_case_assembly.md](./jetson_case_assembly.md)
+
