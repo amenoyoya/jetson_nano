@@ -287,3 +287,132 @@ $ sudo systemctl status x0vncserver
 
 [jetson_case_assembly.md](./jetson_case_assembly.md)
 
+***
+
+## 開発環境構築
+
+- 参考:
+    - [Jetson nanoにTensorFlow 1.15とKeras 2.2.5を導入する（Jetpack 4.4）](https://inoccu.com/blog/2020/06/30/173431.html)
+    - [NVIDIA Jetson Nano 初期設定 その１](https://www.miki-ie.com/nvidiajetsonnano/initial-setup-jetson-nano-vol1/)
+
+### 下準備
+```bash
+# -- user@192.168.11.102
+
+# 必要なパッケージをインストール
+## libhdf5-dev: Tensorflow 1.15 インストールに必要
+## libatlas-dev gfortran: Keras 2.2.5 インストールに必要
+$ sudo apt update && sudo apt install -y vim curl git build-essential \
+    zlib1g-dev libssl-dev libbz2-dev libsqlite3-dev libffi-dev libreadline-dev \
+    software-properties-common apt-transport-https ca-certificates \
+    libhdf5-dev libatlas-base-dev gfortran
+```
+
+### anyenv 導入
+- [anyenv](https://github.com/anyenv/anyenv):
+    - 複数バージョンの開発環境をインストール・管理するための仮想環境
+    - nodenv, pyenv, rbenv などの ◯◯env 系環境を一括管理する
+
+```bash
+# -- user@192.168.11.102
+
+# anyenv インストール
+$ git clone https://github.com/anyenv/anyenv ~/.anyenv
+
+$ ~/.anyenv/bin/anyenv install --init
+Do you want to checkout? [y/N]: # <= `y`
+
+$ echo 'export PATH="$HOME/.anyenv/bin:$PATH"' >> ~/.bashrc
+$ echo 'eval "$(anyenv init -)"' >> ~/.bashrc
+$ source ~/.bashrc
+
+# anyenv update plugin の導入
+$ mkdir -p $(anyenv root)/plugins
+$ git clone https://github.com/znz/anyenv-update.git $(anyenv root)/plugins/anyenv-update
+$ anyenv update
+
+# バージョン確認
+$ anyenv -v
+anyenv 1.1.2-1
+
+# --- pyenv 導入 ---
+
+# anyenv を使って pyenv 導入
+## pyenv を使うことで、複数バージョンの Python 環境を構築できる
+$ anyenv install pyenv
+$ exec $SHELL -l
+
+# pyenv で Python 2.7.18 と 3.6.10 をインストール
+## ※ Jetson Nano に Tensorflow 1.15 をインストールするには Python 3.6 が必要
+$ pyenv install 2.7.18
+$ pyenv install 3.6.10
+
+# pyenv では 2系 と 3系 を同時に指定できる
+## python  => 2.7.18
+## python3 => 3.6.10
+$ pyenv global 2.7.18 3.6.10
+
+# 現在選択されているバージョンを確認
+$ pyenv versions
+* 2.7.18 (set by /home/user/.anyenv/envs/pyenv/version)
+* 3.6.10 (set by /home/user/.anyenv/envs/pyenv/version)
+
+$ python --version
+2.7.18
+
+$ python --version
+3.6.10
+
+# pip パッケージマネージャを更新しておく
+$ pip install --upgrade pip setuptools
+$ pip3 install --upgrade pip setuptools
+
+# --- nodenv 導入 ---
+# anyenv を使って nodenv 導入
+## nodenv を使うことで、複数バージョンの Node.js 環境を構築できる
+$ anyenv install nodenv
+$ exec $SHELL -l
+
+## nodenv-yarn-install プラグイン導入: nodenv install 時に yarn もインストールする
+$ mkdir -p "$(nodenv root)/plugins"
+$ git clone https://github.com/pine/nodenv-yarn-install.git "$(nodenv root)/plugins/nodenv-yarn-install"
+$ echo 'export PATH="$HOME/.yarn/bin:$PATH"' >> ~/.bashrc
+
+# Node.js 12.18.4 インストール
+$ touch $(nodenv root)/default-packages
+$ nodenv install 12.18.4
+
+# Node.js 12.18.4 に切り替え
+$ nodenv global 12.18.4
+
+# 現在選択されているバージョンを確認
+$ nodenv versions
+* 12.18.4 (set by /home/user/.anyenv/envs/nodenv/version)
+
+# 一度シェルを再起動しないと Node.js が使えない
+$ exec $SHELL -l
+
+# バージョン確認
+$ node -v
+v12.18.4
+```
+
+### 機械学習関連ライブラリ導入
+```bash
+# -- user@192.168.11.102
+
+# Tensorflow依存ライブラリ導入
+$ pip3 install \
+    numpy grpcio absl-py py-cpuinfo psutil portpicker six mock requests \
+    gast h5py astor termcolor protobuf \
+    keras-applications keras-preprocessing wrapt google-pasta
+
+# JetPack 4.4 対応の Tensorflow 1.15 インストール
+$ pip3 install https://developer.download.nvidia.com/compute/redist/jp/v44/tensorflow/tensorflow-1.15.2+nv20.4-cp36-cp36m-linux_aarch64.whl
+
+# Keras 2.2.5 インストール
+$ pip3 install cython keras==2.2.5
+
+# Jupyter Notebook インストール
+$ pip3 install jupyter notebook
+```
